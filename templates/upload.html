@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF and Generate Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>PDF Upload and Quiz Generation</h1>
+    </header>
+
+    <div class="container">
+        <!-- Avertissement questions non répondues -->
+        <div class="unanswered-warning">
+            ⚠️ Please answer all questions before submitting!
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Section Upload PDF -->
+        <div class="section">
+            <h2>Upload PDF and Extract Segmentation</h2>
+            {% if error %}
+                <p style="color: red;">{{ error }}</p>
+            {% endif %}
+
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <label for="file">Select PDF:</label>
+                <input type="file" name="file" id="file" accept="application/pdf" required>
+                <button type="submit">Upload</button>
+            </form>
+            <!-- Affichage des données extraites -->
+            {% if extracted_text %}
+            <div class="extracted-container">
+                <h3>Extracted Text:</h3>
+                <pre>Course Name: {{ extracted_text['courseName'] }}</pre>
+
+                <h4>Segmentation des titres:</h4>
+                <ul class="segmentation-list">
+                    {% for sous_titre in extracted_text['segmentation_titres'] %}
+                        <li>
+                            <button class="title-btn" onclick="toggleContent(this)">
+                                {{ loop.index }}. {{ sous_titre.Segmentationtitle}}
+                            </button>
+                            <div class="content-box" style="display: none;">
+                                {{ sous_titre.Segmentationcontent }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- {% if extracted_text %}
+            <div class="extracted-container">
+                <h3>Extracted Text:</h3>
+                <pre>Course Name: {{ extracted_text['courseName'] }}</pre>
+
+                 Debug: Afficher les données JSON 
+                <pre>{{ extracted_text['segmentation_titres']}}</pre>
+
+                {% if 'segmentation_titres' in extracted_text['segmentation_titres'] %}
+                <h4>Segmentation des titres:</h4>
+                <ul class="segmentation-list">
+                    {% for sous_titre in extracted_text['segmentation_titres'] %}
+                        {% if 'Segmentationtitle' in sous_titre and 'Segmentationcontent' in sous_titre %}
+                        <li>
+                            <button class="title-btn" onclick="toggleContent(this)">{{ sous_titre.index }}. {{ sous_titre.Segmentationtitle }}</button>
+                            <div class="content-box" style="display: none;">
+                                {{ sous_titre.Segmentationcontent }}
+                            </div>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <p>Aucune segmentation trouvée.</p>
+                {% endif %}
+            </div>
+            {% endif %} -->
+        </div>
+
+        <!-- Section Génération Quiz -->
+        <div class="section">
+            <h2>Generate Quiz</h2>
+            {% if extracted_text %}
+            <div class="select-container">
+                <label for="segmentation_select">Select Segmentation Title for Quiz:</label>
+                <select id="segmentation_select" name="segmentation_title">
+                    {% for sous_titre in extracted_text['segmentation_titres'] %}
+                        <option value="{{ sous_titre | tojson }}">{{ sous_titre.Segmentationtitle }}</option>
+                    {% endfor %}
+                </select>
+                
+                </div>
+                
+                <div class="button-group">
+                    <button id="generate_quiz_btn" class="btn-primary">Generate Quiz</button>
+                    <button id="finish_quiz_btn" class="btn-secondary" style="display:none;">Finish Quiz</button>
+                    <button id="generate-explication-btn" class="btn-info" style="display:none;">Generate Explanation</button>
+                </div>
+
+                <div class="quiz-container" id="quiz-container" style="display: none;">
+                    <div class="quiz-header">
+                        <h3>Quiz Title: <span id="quiz-title"></span></h3>
+                        <div class="quiz-meta" id="quiz-meta"></div>
+                    </div>
+                    <div id="quiz-questions" class="questions-container"></div>
+                </div>
+                <div id="quiz-score-container" class="score-container" style="display: none;"></div>
+
+                
+                <div class="explanations-container" style="display: none;">
+                    <div class="explanation-header">
+                        <h3>📚 Detailed Explanations</h3>
+                        <div class="score-badge"></div>
+                    </div>
+                    <div class="explanation-content">
+                        <h4>Key Learning Points:</h4>
+                        <ul class="explanation-points"></ul>
+                        <div class="explanation-meta">
+                            <span class="segment"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="exercice-container">
+                    <h2>Générateur d'Exercices</h2>
+            
+                   
+                    <button id="generate-exercises-btn" style="display: none;">Generate Exercises</button>
+
+            
+                    <!-- Affichage des exercices générés -->
+                    <div id="exercises"></div>
+                </div>
+            </div>
+            {% else %}
+            <p class="upload-reminder">Please upload a PDF first to extract the segmentation titles.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2024 Quiz Generator. All rights reserved.
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+</body>
+</html>
